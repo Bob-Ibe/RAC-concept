@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mijn crew · Rise Above Creators</title>
+<link rel="icon" href="../assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body data-root="../" data-page="dashboard" data-path="dashboard/index.html">
+<div data-header></div>
+<main data-main></main>
+<div data-footer></div>
+<script src="../assets/js/app.js"></script>
+<script>
+(function () {
+  var main = document.querySelector('[data-main]');
+  var R = RA.RULES;
+
+  function signup() {
+    main.innerHTML =
+      '<section class="page-hero"><div class="container"><span class="eyebrow">Aanmelden</span><h1>Doe mee</h1>' +
+      '<p class="lead">Klim je bij The Climbing Corner en post je weleens op Instagram? Meld je aan, krijg je eigen code en begin met vrijspelen.</p></div></section>' +
+      '<section class="section section--tight"><div class="container split">' +
+      '<form class="card" data-signup novalidate>' +
+      '<div class="field"><label for="f-name">Voornaam</label><input id="f-name" type="text" required autocomplete="given-name" maxlength="20"></div>' +
+      '<div class="field"><label for="f-ig">Instagram</label><input id="f-ig" type="text" required placeholder="@jouwnaam" autocomplete="off" maxlength="40"></div>' +
+      '<label class="check"><input type="checkbox" required data-agree> <span>Ik ken de spelregels: echte views, respect in de hal, en punten zijn klimtegoed.</span></label>' +
+      '<p class="hint" data-err hidden></p>' +
+      '<button class="btn btn--solid" type="submit">Maak mijn code</button>' +
+      '</form>' +
+      '<div class="rows"><div class="row"><div><strong>Je eigen code</strong><small>Staat op je eindkaart. Nieuwe klimmers noemen hem aan de balie.</small></div></div>' +
+      '<div class="row"><div><strong>Meteen een visual</strong><small>De eindkaart met jouw code is direct van jou.</small></div></div>' +
+      '<div class="row"><div><strong>Punten elke maand</strong><small>Inzendingen worden aan het eind van de maand gecontroleerd en uitbetaald in punten.</small></div></div></div>' +
+      '</div></section>';
+    main.querySelector('[data-signup]').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = main.querySelector('#f-name').value.trim();
+      var ig = main.querySelector('#f-ig').value.trim();
+      var err = main.querySelector('[data-err]');
+      if (!name || !ig || !main.querySelector('[data-agree]').checked) { err.hidden = false; err.textContent = 'Vul je naam en Instagram in en vink de spelregels aan.'; return; }
+      if (ig.charAt(0) !== '@') ig = '@' + ig;
+      var base = name.toUpperCase().normalize('NFD').replace(/[^A-Z]/g, '').slice(0, 8) || 'CREW';
+      var taken = RA.state.creators.map(function (c) { return c.code; });
+      var code = base;
+      if (taken.indexOf(code) !== -1) code = base + (10 + Math.floor(Math.random() * 89));
+      RA.state.user = { name: name, handle: ig, code: code };
+      RA.save();
+      RA.refreshHeader();
+      RA.toast('Welkom in de crew, ' + name);
+      dash();
+      window.scrollTo(0, 0);
+    });
+  }
+
+  function statusBadge(s) {
+    if (s.status === 'approved') return '<span class="badge badge--ok">+' + s.points + ' punten</span>';
+    if (s.status === 'rejected') return '<span class="badge badge--no">Afgekeurd</span>';
+    return '<span class="badge">Wordt gecontroleerd</span>';
+  }
+
+  function dash() {
+    var st = RA.state, u = st.user;
+    var unlocked = st.unlocked.length;
+    var capPct = Math.min(100, st.monthPoints / R.monthCap * 100);
+    var nextReward = RA.REWARDS.filter(function (r) { return r.cost > st.points; })[0];
+    main.innerHTML =
+      '<section class="page-hero"><div class="container"><span class="eyebrow">' + RA.esc(u.handle) + '</span><h1>Hoi ' + RA.esc(u.name) + '</h1></div></section>' +
+      '<section class="section section--tight"><div class="container stack">' +
+      '<div class="grid grid--3">' +
+        '<div class="card card--ink"><div class="stat"><span class="mono">Punten</span><span class="big">' + RA.fmt(st.points) + '</span>' +
+          '<span class="mono">' + (nextReward ? 'Nog ' + (nextReward.cost - st.points) + ' tot ' + RA.esc(nextReward.title.toLowerCase()) : 'Je kunt alles inwisselen') + '</span></div></div>' +
+        '<div class="card"><div class="stat"><span class="mono">Deze maand</span><span class="big">' + st.monthPoints + '<span style="font-size:.4em"> / ' + R.monthCap + '</span></span><div class="bar" style="margin-top:8px"><span style="width:' + capPct + '%"></span></div></div></div>' +
+        '<div class="card"><div class="stat"><span class="mono">Nieuwe klimmers via jou</span><span class="big">' + st.visitors + '</span><span class="mono">' + R.newVisitor + ' punten per persoon</span></div></div>' +
+      '</div>' +
+      '<div class="card"><div class="split" style="align-items:center">' +
+        '<div><span class="eyebrow">Jouw code</span><div class="code-box"><strong>' + RA.esc(u.code) + '</strong><button class="btn btn--small" type="button" data-copy>Kopieer</button></div>' +
+        '<p class="hint" style="margin-top:10px">Zeg in je video: "Eerste keer klimmen? Noem ' + RA.esc(u.code) + ' aan de balie." Je eindkaart doet de rest.</p></div>' +
+        '<div class="btn-row"><a class="btn btn--solid" href="../kluis/index.html">Eindkaart downloaden</a><a class="btn" href="../spellen/index.html">Spellen (' + unlocked + '/' + RA.VAULT.length + ' visuals)</a></div>' +
+      '</div></div>' +
+      '<div class="split">' +
+        '<form class="card" data-submit novalidate><h3>Video insturen</h3><p class="hint">Stuur je Reel in zodra hij een paar dagen online staat. Aan het eind van de maand keurt de hal alle inzendingen.</p>' +
+          '<div class="field"><label for="s-url">Link naar je Reel</label><input id="s-url" type="url" required placeholder="https://www.instagram.com/reel/..."></div>' +
+          '<div class="field"><label for="s-views">Aantal views (uit je inzichten)</label><input id="s-views" type="number" min="0" step="1" required inputmode="numeric" placeholder="bijvoorbeeld 4200"></div>' +
+          '<div class="field"><label for="s-shot">Screenshot van je inzichten</label><input id="s-shot" type="file" accept="image/*"><span class="hint">In dit prototype blijft het screenshot op je eigen apparaat.</span></div>' +
+          '<label class="check"><input type="checkbox" data-tag> <span>Ik heb @the_climbingcorner getagd of de video als samenwerking geplaatst (+' + Math.round(R.tagBonus * 100) + '%).</span></label>' +
+          '<div class="calc" data-calc>Vul je views in voor een schatting.</div>' +
+          '<p class="hint" data-serr hidden></p>' +
+          '<button class="btn btn--solid" type="submit">Insturen</button>' +
+        '</form>' +
+        '<div class="card"><h3>Mijn inzendingen</h3><ul class="list" data-subs></ul></div>' +
+      '</div>' +
+      (st.vouchers.length ? '<div class="card"><h3>Mijn bonnen</h3><ul class="list">' + st.vouchers.map(function (v) { return '<li><div><span class="url">' + RA.esc(v.title) + '</span><div class="meta">' + v.date + '</div></div><span class="badge">' + v.code + '</span></li>'; }).join('') + '</ul></div>' : '') +
+      '</div></section>';
+
+    var subs = main.querySelector('[data-subs]');
+    subs.innerHTML = st.submissions.length ? st.submissions.slice().reverse().map(function (s) {
+      return '<li><div><span class="url">' + RA.esc(s.url) + '</span><div class="meta">' + s.date + ' · ' + RA.fmt(s.views) + ' views' + (s.tagged ? ' · getagd' : '') + '</div></div>' + statusBadge(s) + '</li>';
+    }).join('') : '<li><span class="hint">Nog niets ingestuurd.</span></li>';
+
+    main.querySelector('[data-copy]').addEventListener('click', function () {
+      try { navigator.clipboard.writeText(u.code); RA.toast('Code gekopieerd'); } catch (e) { RA.toast(u.code); }
+    });
+
+    var form = main.querySelector('[data-submit]'), calc = main.querySelector('[data-calc]');
+    function updateCalc() {
+      var v = parseInt(form.querySelector('#s-views').value, 10);
+      if (!v) { calc.textContent = 'Vul je views in voor een schatting.'; return; }
+      var p = RA.pointsFor(v, form.querySelector('[data-tag]').checked);
+      calc.textContent = 'Schatting: ' + p + ' punten na goedkeuring (' + RA.euro(p * R.pointValue) + ' klimtegoed).';
+    }
+    form.addEventListener('input', updateCalc);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var url = form.querySelector('#s-url').value.trim(), views = parseInt(form.querySelector('#s-views').value, 10);
+      var err = form.querySelector('[data-serr]');
+      if (!/^https?:\/\/(www\.)?instagram\.com\//i.test(url)) { err.hidden = false; err.textContent = 'Plak een link van Instagram.'; return; }
+      if (!views || views < 1) { err.hidden = false; err.textContent = 'Vul het aantal views in.'; return; }
+      st.submissions.push({ id: 'u' + Date.now(), url: url, views: views, tagged: form.querySelector('[data-tag]').checked, status: 'pending', date: new Date().toISOString().slice(0, 10) });
+      RA.save();
+      RA.toast('Ingestuurd. De hal kijkt ernaar.');
+      dash();
+    });
+  }
+
+  if (RA.state.user) dash(); else signup();
+})();
+</script>
+</body>
+</html>

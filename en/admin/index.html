@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin · Rise Above Creators</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="../../assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/main.css">
+<style>
+  .queue li { grid-template-columns: 1fr auto; }
+  .queue .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .shot { width: 54px; aspect-ratio: 9/16; background: var(--ink); color: var(--white); display: grid; place-items: center; font-family: var(--mono); font-size: 9px; border-radius: 2px; text-align: center; line-height: 1.2; }
+  .qrow { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 14px; align-items: center; }
+  .qrow .meta { overflow-wrap: anywhere; }
+  .queue li > * { min-width: 0; }
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 820px) { .kpi { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .queue li { grid-template-columns: 1fr; } .queue .actions { justify-content: flex-start; } }
+</style>
+</head>
+<body data-root="../../" data-page="admin" data-path="admin/index.html">
+<div data-header></div>
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">For The Climbing Corner only</span>
+      <h1>Admin</h1>
+      <p class="lead">Review submissions, register new climbers at reception and see what the programme brings in this month.</p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container stack">
+      <div class="kpi" data-kpi></div>
+    </div>
+  </section>
+
+  <section class="section section--tight" style="padding-top:0">
+    <div class="container split">
+      <div class="card">
+        <h3>To review</h3>
+        <p class="hint">Check the link and the screenshot. Do the views add up? Then approve.</p>
+        <ul class="list queue" data-queue></ul>
+      </div>
+      <div class="stack">
+        <form class="card" data-desk>
+          <h3>Reception: new climber</h3>
+          <p class="hint">Someone visits for the first time and mentions a code? Enter it here. The creator gets <span data-nv></span> points.</p>
+          <div class="field"><label for="d-code">Code</label><input id="d-code" type="text" autocomplete="off" placeholder="for example LOTTE" style="text-transform:uppercase"></div>
+          <button class="btn btn--solid" type="submit">Register</button>
+          <p class="hint" data-desk-msg style="margin-top:10px"></p>
+        </form>
+        <div class="card card--ink">
+          <h3>Rules</h3>
+          <div class="rows" data-rules style="border-color:#fff"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<div data-footer></div>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var R = RA.RULES, st = RA.state;
+  document.querySelector('[data-nv]').textContent = R.newVisitor;
+  document.querySelector('[data-rules]').innerHTML = [
+    ['1,000 views', R.pointsPer1000 + ' points'], ['Tagged or collaboration', '+' + Math.round(R.tagBonus * 100) + '%'],
+    ['New climber', R.newVisitor + ' points'], ['Maximum per creator', R.monthCap + ' / month'], ['1 point', RA.euro(R.pointValue) + ' credit']
+  ].map(function (r) { return '<div class="row" style="border-color:rgba(255,255,255,.16)"><span>' + r[0] + '</span><span class="val">' + r[1] + '</span></div>'; }).join('');
+
+  if (!st.stats) { st.stats = { views: 41800, points: 0, visitors: 6 }; st.stats.points = st.creators.reduce(function (a, c) { return a + c.points; }, 0); RA.save(); }
+
+  function all() {
+    var mine = st.submissions.map(function (s) { return Object.assign({ who: st.user ? st.user.name : 'You', handle: st.user ? st.user.handle : '', mine: true }, s); });
+    return st.others.concat(mine);
+  }
+
+  function kpis() {
+    var s = st.stats;
+    var lowMeta = s.views / 1000 * 4, highMeta = s.views / 1000 * 10;
+    document.querySelector('[data-kpi]').innerHTML = [
+      ['Views this month', RA.fmt(s.views), 'approved videos'],
+      ['New climbers', RA.fmt(s.visitors), 'via codes at reception'],
+      ['Credit given out', RA.euro(s.points * R.pointValue), RA.fmt(s.points) + ' points'],
+      ['Same reach via Meta', RA.euro(lowMeta).replace('.00', '') + ' to ' + RA.euro(highMeta).replace('.00', ''), 'estimate, €4 to €10 per 1,000']
+    ].map(function (k, i) {
+      return '<div class="card' + (i === 3 ? ' card--ink' : '') + '"><div class="stat"><span class="mono">' + k[0] + '</span><span class="big" style="font-size:clamp(30px,4vw,48px)">' + k[1] + '</span><span class="mono">' + k[2] + '</span></div></div>';
+    }).join('');
+  }
+
+  function queue() {
+    var q = all().filter(function (s) { return s.status === 'pending'; });
+    var el = document.querySelector('[data-queue]');
+    el.innerHTML = q.length ? q.map(function (s) {
+      var p = RA.pointsFor(s.views, s.tagged);
+      return '<li><div class="qrow"><div class="shot">SCREEN<br>SHOT</div><div><span class="url"><strong>' + RA.esc(s.who) + '</strong> ' + RA.esc(s.handle) + (s.mine ? ' (you)' : '') + '</span>' +
+        '<div class="meta">' + RA.fmt(s.views) + ' views · ' + (s.tagged ? 'tagged' : 'not tagged') + ' · ' + s.date + '</div>' +
+        '<div class="meta">' + RA.esc(s.url) + '</div></div></div>' +
+        '<div class="actions"><button class="btn btn--small btn--solid" type="button" data-ok="' + s.id + '">Approve · ' + p + ' pt</button><button class="btn btn--small" type="button" data-no="' + s.id + '">Reject</button></div></li>';
+    }).join('') : '<li><span class="hint">Everything has been reviewed. Submit a video via My crew to try this.</span></li>';
+  }
+
+  function find(id) { return st.others.concat(st.submissions).filter(function (s) { return s.id === id; })[0]; }
+
+  document.querySelector('[data-queue]').addEventListener('click', function (e) {
+    var ok = e.target.closest('[data-ok]'), no = e.target.closest('[data-no]');
+    if (!ok && !no) return;
+    var s = find((ok || no).getAttribute(ok ? 'data-ok' : 'data-no'));
+    if (no) { s.status = 'rejected'; RA.save(); queue(); RA.toast('Rejected'); return; }
+    var p = RA.pointsFor(s.views, s.tagged);
+    if (st.submissions.indexOf(s) !== -1) {
+      p = RA.addPoints(p);
+    } else {
+      var c = st.creators.filter(function (x) { return x.name === s.who; })[0];
+      p = Math.min(p, Math.max(0, R.monthCap - c.points));
+      c.points += p;
+    }
+    s.status = 'approved'; s.points = p;
+    st.stats.views += s.views; st.stats.points += p;
+    RA.save(); RA.refreshHeader(); queue(); kpis();
+    RA.toast('Approved: ' + p + ' points for ' + s.who);
+  });
+
+  document.querySelector('[data-desk]').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = document.querySelector('#d-code'), code = input.value.trim().toUpperCase(), msg = document.querySelector('[data-desk-msg]');
+    if (!code) return;
+    var who = null;
+    if (st.user && st.user.code === code) {
+      var got = RA.addPoints(R.newVisitor);
+      st.visitors++; st.stats.points += got; who = st.user.name + ' (you), +' + got + ' points';
+    } else {
+      var c = st.creators.filter(function (x) { return x.code === code; })[0];
+      if (c) { var add = Math.min(R.newVisitor, Math.max(0, R.monthCap - c.points)); c.points += add; who = c.name + ', +' + add + ' points'; st.stats.points += add; }
+    }
+    if (!who) { msg.textContent = 'Unknown code: ' + code; return; }
+    st.stats.visitors++;
+    RA.save(); RA.refreshHeader(); kpis();
+    msg.textContent = 'Registered for ' + who + '.';
+    input.value = '';
+  });
+
+  kpis(); queue();
+})();
+</script>
+</body>
+</html>

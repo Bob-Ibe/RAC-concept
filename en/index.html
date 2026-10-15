@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rise Above Creators · The Climbing Corner</title>
+<meta name="description" content="Make videos about The Climbing Corner, unlock visuals and earn climbing credit.">
+<link rel="icon" href="../assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body data-root="../" data-page="home" data-path="index.html">
+<div data-header></div>
+<main>
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-copy">
+        <span class="eyebrow">The Climbing Corner · Heerlen</span>
+        <h1>Rise<br>Above<br><span class="outline-text">Creators</span></h1>
+        <p class="lead">You're climbing anyway. Film it, post it and earn climbing credit with it. Unlock visuals of the gym, put them in your Reels and help new climbers onto the mat.</p>
+        <div class="btn-row on-dark">
+          <a class="btn btn--solid" href="dashboard/index.html">Join</a>
+          <a class="btn" href="spellen/index.html">Play a game</a>
+        </div>
+      </div>
+      <div class="hero-media">
+        <img class="cut" src="../assets/img/hero-cut-1280.webp" alt="Climber reaching for the next hold" width="1280" height="1600">
+        <div class="hero-phone" aria-hidden="true">
+          <video src="../assets/video/rise-opener.mp4" poster="../assets/poster/rise-opener.jpg" autoplay muted loop playsinline></video>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">How it works</span>
+        <h2>Play. Post.<br>Earn.</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="num">01</span>
+          <h3>Unlock visuals</h3>
+          <p>Five short games about bouldering. Hit a score and you unlock motion videos of the gym for your own Reels.</p>
+        </div>
+        <div class="step">
+          <span class="num">02</span>
+          <h3>Post your video</h3>
+          <p>Film in the gym, add a visual and finish with your end card. It shows your personal code.</p>
+        </div>
+        <div class="step">
+          <span class="num">03</span>
+          <h3>Earn climbing credit</h3>
+          <p>Send in the link and a screenshot of your views. At the end of the month you get points, which you trade for entries and more.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark">
+    <div class="container split">
+      <div class="section-head">
+        <span class="eyebrow">Points</span>
+        <h2>What do<br>you get?</h2>
+        <p class="muted">Views are nice. New climbers in the gym are the best part. That is why someone who mentions your code at reception earns you the most.</p>
+      </div>
+      <div class="rows" data-points-rows></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">The vault</span>
+        <h2>Eleven visuals.<br><span class="outline-text">One is already yours.</span></h2>
+        <p class="lead">Your end card with your code is yours straight away. You unlock the rest.</p>
+      </div>
+      <div class="grid grid--4" data-vault-preview></div>
+      <div class="btn-row" style="margin-top:28px">
+        <a class="btn btn--solid" href="kluis/index.html">Open the vault</a>
+        <a class="btn" href="spellen/index.html">Go to the games</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="container split">
+      <div class="section-head">
+        <span class="eyebrow">Rules</span>
+        <h2>Fair<br>play</h2>
+      </div>
+      <div class="rows">
+        <div class="row"><div><strong>Real views</strong><small>Bought views or bots? Then your points are void. Every submission is checked by hand.</small></div></div>
+        <div class="row"><div><strong>Up to <span data-cap></span> points a month</strong><small>That keeps it fair for everyone, and the gym knows where it stands.</small></div></div>
+        <div class="row"><div><strong>Climbing credit, not money</strong><small>Trade your points at reception for entries, shoe rental, sessions or a month of membership.</small></div></div>
+        <div class="row"><div><strong>Respect in the gym</strong><small>Don't film anyone who doesn't want to be filmed, and stay out of other climbers' fall zones.</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark">
+    <div class="container center">
+      <h2 style="margin-bottom:24px">Ready to<br><span class="outline-text">climb?</span></h2>
+      <div class="btn-row on-dark" style="justify-content:center">
+        <a class="btn btn--solid" href="dashboard/index.html">Join</a>
+        <a class="btn" href="ranglijst/index.html">See the leaderboard</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+<div data-footer></div>
+<script src="../assets/js/app.js"></script>
+<script>
+(function () {
+  var R = RA.RULES;
+  document.querySelector('[data-cap]').textContent = RA.fmt(R.monthCap);
+  document.querySelector('[data-points-rows]').innerHTML = [
+    ['1,000 views', 'On an approved video', R.pointsPer1000 + ' points'],
+    ['Tag the gym', 'Tag @the_climbingcorner or post it as a collaboration', '+' + Math.round(R.tagBonus * 100) + '%'],
+    ['New climber', 'Someone who has never been before and mentions your code at reception', R.newVisitor + ' points'],
+    ['Day pass', 'What a day of climbing costs in points', RA.REWARDS[1].cost + ' points']
+  ].map(function (r) { return '<div class="row"><div><strong>' + r[0] + '</strong><small>' + r[1] + '</small></div><span class="val">' + r[2] + '</span></div>'; }).join('');
+
+  var lock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  var pick = ['eindkaart', 'send-stempel', 'bob-glow', 'bob-munt'];
+  document.querySelector('[data-vault-preview]').innerHTML = pick.map(function (id) {
+    var v = RA.VAULT.filter(function (x) { return x.id === id; })[0];
+    var open = RA.isUnlocked(id);
+    return '<a class="card vault-item' + (open ? '' : ' is-locked') + '" href="kluis/index.html" style="text-decoration:none">' +
+      '<div class="media"><img src="' + v.poster + '" alt="" loading="lazy">' + (open ? '<span class="tag">Yours</span>' : '<div class="lock">' + lock + 'Unlock it</div>') + '</div>' +
+      '<div class="body"><h3>' + v.title + '</h3><span class="credit">' + v.kind + '</span></div></a>';
+  }).join('');
+})();
+</script>
+</body>
+</html>

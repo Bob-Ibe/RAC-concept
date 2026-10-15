@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spellen · Rise Above Creators</title>
+<link rel="icon" href="../assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body data-root="../" data-page="spellen" data-path="spellen/index.html">
+<div data-header></div>
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">Vijf spellen · tien visuals</span>
+      <h1>Spellen</h1>
+      <p class="lead">Elk spel gaat over iets wat je echt doet op de mat. Haal de score en de visual komt in je kluis.</p>
+    </div>
+  </section>
+  <section class="section section--tight">
+    <div class="container">
+      <div class="grid grid--3">
+      <a class="card game-card" href="top-out/index.html" data-game="top-out">
+        <div class="art"><span class="idx">01</span><svg viewBox="0 0 200 150" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M70 140 L110 105 L80 70 L120 40 L100 12" stroke-dasharray="2 12"/><circle cx="110" cy="105" r="9" fill="currentColor"/><circle cx="80" cy="70" r="9" fill="currentColor"/><circle cx="120" cy="40" r="9"/><circle cx="100" cy="12" r="6"/></svg></div>
+        <div class="body"><h3>Top-out</h3><p data-blurb></p><ul class="unlock-list" data-unlocks></ul><span class="best" data-best></span></div>
+      </a>
+      <a class="card game-card" href="beta/index.html" data-game="beta">
+        <div class="art"><span class="idx">02</span><svg viewBox="0 0 200 150" fill="none" stroke="currentColor" stroke-width="4"><circle cx="60" cy="125" r="8" fill="currentColor"/><circle cx="95" cy="95" r="7"/><circle cx="140" cy="110" r="7"/><circle cx="75" cy="60" r="7"/><circle cx="130" cy="65" r="7"/><circle cx="105" cy="22" r="9" fill="currentColor"/><circle cx="60" cy="125" r="48" stroke-dasharray="3 7" stroke-width="2"/></svg></div>
+        <div class="body"><h3>Beta van de dag</h3><p data-blurb></p><ul class="unlock-list" data-unlocks></ul><span class="best" data-best></span></div>
+      </a>
+      <a class="card game-card" href="pump/index.html" data-game="pump">
+        <div class="art"><span class="idx">03</span><svg viewBox="0 0 200 150" fill="none" stroke="currentColor" stroke-width="4"><rect x="34" y="20" width="16" height="110"/><rect x="34" y="70" width="16" height="60" fill="currentColor"/><circle cx="100" cy="110" r="9" fill="currentColor"/><circle cx="150" cy="80" r="9"/><circle cx="100" cy="50" r="15"/><circle cx="150" cy="20" r="9"/></svg></div>
+        <div class="body"><h3>Pump</h3><p data-blurb></p><ul class="unlock-list" data-unlocks></ul><span class="best" data-best></span></div>
+      </a>
+      <a class="card game-card" href="val-goed/index.html" data-game="val-goed">
+        <div class="art"><span class="idx">04</span><svg viewBox="0 0 200 150" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="100" cy="40" r="11" fill="currentColor"/><path d="M100 54 V80 M100 80 L118 98 L104 112 M100 80 L84 98 L96 112 M100 62 L122 76 M100 62 L78 78"/><rect x="30" y="118" width="140" height="22" fill="currentColor" stroke="none"/></svg></div>
+        <div class="body"><h3>Val goed</h3><p data-blurb></p><ul class="unlock-list" data-unlocks></ul><span class="best" data-best></span></div>
+      </a>
+      <a class="card game-card" href="route-lezen/index.html" data-game="route-lezen">
+        <div class="art"><span class="idx">05</span><svg viewBox="0 0 200 150" fill="none" stroke="currentColor" stroke-width="4"><circle cx="50" cy="120" r="10" fill="currentColor"/><circle cx="110" cy="105" r="10" fill="currentColor"/><circle cx="80" cy="60" r="10"/><circle cx="145" cy="45" r="10"/><circle cx="160" cy="110" r="10"/><circle cx="40" cy="35" r="10"/><text x="46" y="125" font-size="13" fill="#0a0a0a" stroke="none" font-family="monospace">1</text><text x="106" y="110" font-size="13" fill="#0a0a0a" stroke="none" font-family="monospace">2</text></svg></div>
+        <div class="body"><h3>Route lezen</h3><p data-blurb></p><ul class="unlock-list" data-unlocks></ul><span class="best" data-best></span></div>
+      </a>
+      </div>
+    </div>
+  </section>
+</main>
+<div data-footer></div>
+<script src="../assets/js/app.js"></script>
+<script>
+document.querySelectorAll('[data-game]').forEach(function (card) {
+  var g = RA.GAMES.filter(function (x) { return x.id === card.getAttribute('data-game'); })[0];
+  card.querySelector('[data-blurb]').textContent = g.blurb;
+  card.querySelector('[data-unlocks]').innerHTML = g.tiers.map(function (t) {
+    var v = RA.VAULT.filter(function (x) { return x.id === t.unlock; })[0];
+    return '<li class="' + (RA.isUnlocked(v.id) ? 'done' : '') + '">' + RA.esc(v.title) + '</li>';
+  }).join('');
+  var b = RA.state.best[g.id];
+  card.querySelector('[data-best]').textContent = b === undefined ? RA.t('Nog niet gespeeld', 'Not played yet') : RA.t('Beste: ', 'Best: ') + b + ' ' + g.unit;
+});
+</script>
+</body>
+</html>

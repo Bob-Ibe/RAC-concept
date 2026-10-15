@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
+<style>html,body{margin:0;background:#000}</style></head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="../assets/js/motion.js"></script>
+<script>
+var ctx=document.getElementById('c').getContext('2d'),opts={};
+function load(src){return new Promise(function(r){var i=new Image();i.onload=function(){r(i)};i.src=src;});}
+window.ready=(async function(){
+  opts.logoWhite=await load('../assets/img/logo-mark-white.png');
+  opts.logo=await load('../assets/img/logo-mark.png');
+  await document.fonts.load('800 100px Archivo');await document.fonts.load('500 30px "JetBrains Mono"');
+  await document.fonts.ready;return true;})();
+window.frame=function(id,t,extra){var c=RAMotion.get(id);c.draw(ctx,t,Object.assign({},opts,extra||{}));return document.getElementById('c').toDataURL('image/jpeg',0.95);};
+</script></body></html>

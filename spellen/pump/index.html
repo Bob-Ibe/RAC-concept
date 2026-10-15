@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pump · Rise Above Creators</title>
+<link rel="icon" href="../../assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/main.css">
+</head>
+<body data-root="../../" data-page="spellen" data-path="spellen/pump/index.html">
+<div data-header></div>
+<main>
+  <section class="page-hero" style="padding-bottom:28px">
+    <div class="container">
+      <a class="eyebrow" href="../index.html">← Alle spellen</a>
+      <h1 style="font-size:clamp(48px,9vw,112px)">Pump</h1>
+      <p class="lead">Hou het vol tot de klok op nul staat.</p>
+    </div>
+  </section>
+  <section class="section section--tight">
+    <div class="container game-wrap">
+      <div>
+        <div class="stage" data-stage>
+          <canvas aria-label="Speelveld Pump"></canvas>
+          <div class="hud"><span data-hud-l></span><span data-hud-r></span></div>
+          <div class="overlay"></div>
+        </div>
+        <div class="controls"><button class="btn btn--solid" type="button" data-hand="L">Links</button><button class="btn btn--solid" type="button" data-hand="R">Rechts</button></div>
+      </div>
+      <aside class="side card">
+        <h3>Zo speel je</h3>
+        <ol><li>Tik de hand die bij de volgende greep staat.</li><li>Op kleine grepen loopt je pomp vol.</li><li>Op een RUST-greep schud je uit.</li><li>Andere hand gekozen? Extra pomp.</li><li>Pomp vol of tijd op: einde.</li></ol>
+        <h3 style="margin-top:8px">Vrij te spelen</h3>
+        <ul class="unlock-list" data-unlocks></ul>
+        <p class="best" data-best style="margin-top:16px"></p>
+        <a class="btn btn--small" href="../../kluis/index.html">Naar de kluis</a>
+      </aside>
+    </div>
+  </section>
+</main>
+<div data-footer></div>
+<script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/game-shell.js"></script>
+<script src="../../assets/js/games/pump.js"></script>
+</body>
+</html>

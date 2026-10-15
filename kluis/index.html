@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>De kluis · Rise Above Creators</title>
+<link rel="icon" href="../assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body data-root="../" data-page="kluis" data-path="kluis/index.html">
+<div data-header></div>
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow" data-count></span>
+      <h1>De kluis</h1>
+      <p class="lead">Motion-video's van The Climbing Corner, staand formaat (1080 × 1920) voor Reels en TikTok. Speel ze vrij in de spellen en download ze voor je eigen video's.</p>
+    </div>
+  </section>
+  <section class="section section--tight">
+    <div class="container">
+      <div class="grid grid--4" data-vault></div>
+      <p class="hint" style="margin-top:28px">Green screen-visuals: zet ze als laag boven je video en gebruik chroma key (CapCut: Uitknippen → Chroma key) om het groen weg te halen.</p>
+    </div>
+  </section>
+</main>
+
+<div class="modal" data-modal hidden role="dialog" aria-modal="true" aria-labelledby="m-title">
+  <div class="modal-inner" style="position:relative">
+    <div class="modal-media" data-m-media></div>
+    <div class="modal-body">
+      <button class="btn btn--small modal-close" type="button" data-close>Sluit</button>
+      <span class="eyebrow" data-m-kind></span>
+      <h2 id="m-title" style="font-size:clamp(36px,5vw,56px)" data-m-title></h2>
+      <p data-m-note></p>
+      <div data-m-extra></div>
+      <span class="credit mono muted" data-m-credit></span>
+    </div>
+  </div>
+</div>
+
+<div data-footer></div>
+<script src="../assets/js/app.js"></script>
+<script src="../assets/js/motion.js"></script>
+<script src="../assets/js/logo-data.js"></script>
+<script>
+(function () {
+  var lockSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  var playSvg = '<svg viewBox="0 0 12 14" fill="currentColor"><path d="M0 0l12 7-12 7z"/></svg>';
+  var grid = document.querySelector('[data-vault]');
+
+  function render() {
+    var open = RA.VAULT.filter(function (v) { return RA.isUnlocked(v.id); }).length;
+    document.querySelector('[data-count]').textContent = open + ' van ' + RA.VAULT.length + ' vrijgespeeld';
+    grid.innerHTML = RA.VAULT.map(function (v) {
+      var unlocked = RA.isUnlocked(v.id);
+      var how = v.game ? RA.tierText(v.tier, v.game) + ' in ' + v.game.title : '';
+      return '<article class="card vault-item' + (unlocked ? '' : ' is-locked') + '">' +
+        '<button class="media" type="button" data-open="' + v.id + '" aria-label="' + RA.esc(v.title) + (unlocked ? ' bekijken' : ' is nog op slot') + '">' +
+        '<img src="' + v.poster + '" alt="" loading="lazy">' +
+        (unlocked ? '<span class="tag">' + (v.personal ? 'Jouw code' : 'Vrijgespeeld') + '</span><span class="play">' + playSvg + '</span>'
+                  : '<span class="lock">' + lockSvg + '<span>' + RA.esc(how) + '</span></span>') +
+        '</button>' +
+        '<div class="body"><h3>' + RA.esc(v.title) + '</h3><p>' + RA.esc(v.kind) + '</p><span class="credit">' + v.credit + '</span></div>' +
+        '</article>';
+    }).join('');
+  }
+  render();
+
+  var modal = document.querySelector('[data-modal]'), media = modal.querySelector('[data-m-media]'), extra = modal.querySelector('[data-m-extra]');
+  var raf = null, lastFocus = null;
+
+  function close() {
+    modal.hidden = true;
+    cancelAnimationFrame(raf);
+    media.innerHTML = '';
+    if (lastFocus) lastFocus.focus();
+  }
+  modal.addEventListener('click', function (e) { if (e.target === modal || e.target.hasAttribute('data-close')) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) close(); });
+
+  grid.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-open]');
+    if (!b) return;
+    var v = RA.VAULT.filter(function (x) { return x.id === b.getAttribute('data-open'); })[0];
+    lastFocus = b;
+    modal.querySelector('[data-m-kind]').textContent = v.kind;
+    modal.querySelector('[data-m-title]').textContent = v.title;
+    modal.querySelector('[data-m-credit]').textContent = v.credit;
+    modal.querySelector('[data-m-note]').textContent = v.note;
+    if (!RA.isUnlocked(v.id)) {
+      media.innerHTML = '<img src="' + v.poster + '" alt="" style="filter:blur(14px) grayscale(1) brightness(.6);width:100%;aspect-ratio:9/16;object-fit:cover">';
+      extra.innerHTML = '<p><strong>Nog op slot.</strong> ' + RA.esc(RA.tierText(v.tier, v.game)) + ' in ' + RA.esc(v.game.title) + '.</p>' +
+        '<a class="btn btn--solid" href="../spellen/' + v.game.id + '/index.html">Speel ' + RA.esc(v.game.title) + '</a>';
+    } else if (v.personal) {
+      openEndcard(v);
+    } else {
+      media.innerHTML = '<video src="' + v.src + '" poster="' + v.poster + '" autoplay muted loop playsinline controls></video>';
+      extra.innerHTML = '<a class="btn btn--solid" href="' + v.download + '" download>Download (mp4)</a>';
+    }
+    modal.hidden = false;
+    modal.querySelector('[data-close]').focus();
+  });
+
+  /* eindkaart: live afspelen met jouw code en opnemen als video */
+  function openEndcard(v) {
+    var st = RA.state;
+    var code = st.user ? st.user.code : RA.t('JOUWCODE', 'YOURCODE');
+    var clip = RAMotion.get('eindkaart');
+    var cv = document.createElement('canvas');
+    cv.width = RAMotion.W; cv.height = RAMotion.H;
+    media.appendChild(cv);
+    var ctx = cv.getContext('2d'), logo = new Image(), t0 = performance.now();
+    logo.src = window.RA_LOGO_WHITE || RA.root + 'assets/img/logo-mark-white.png';
+    function loop(now) {
+      var t = ((now - t0) / 1000) % (clip.duration + 1.5);
+      clip.draw(ctx, Math.min(t, clip.duration), { code: code, logoWhite: logo, lang: RA.lang });
+      raf = requestAnimationFrame(loop);
+    }
+    document.fonts.ready.then(function () { raf = requestAnimationFrame(loop); });
+
+    extra.innerHTML = (st.user
+      ? '<div class="code-box"><span class="mono">Jouw code</span><strong>' + RA.esc(code) + '</strong></div>'
+      : '<p class="hint">Je ziet nu een voorbeeld. <a href="../dashboard/index.html">Meld je aan</a> en je eigen code staat erop.</p>') +
+      '<div class="btn-row"><button class="btn btn--solid" type="button" data-rec>Download met ' + (st.user ? 'jouw' : 'deze') + ' code</button></div>' +
+      '<p class="hint" data-rec-status>De video wordt in je browser gemaakt en duurt ' + clip.duration + ' seconden.</p>';
+
+    extra.querySelector('[data-rec]').addEventListener('click', function (e) {
+      var btn = e.currentTarget, status = extra.querySelector('[data-rec-status]');
+      if (!window.MediaRecorder || !cv.captureStream) { status.textContent = 'Je browser kan hier geen video maken. Probeer Chrome of Safari.'; return; }
+      var types = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'];
+      var type = types.filter(function (x) { return MediaRecorder.isTypeSupported(x); })[0];
+      var rec = new MediaRecorder(cv.captureStream(30), { mimeType: type, videoBitsPerSecond: 8000000 });
+      var chunks = [];
+      rec.ondataavailable = function (ev) { if (ev.data.size) chunks.push(ev.data); };
+      rec.onstop = function () {
+        var ext = type.indexOf('mp4') !== -1 ? 'mp4' : 'webm';
+        var blob = new Blob(chunks, { type: type.split(';')[0] });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = RA.t('eindkaart-', 'endcard-') + code.toLowerCase() + '.' + ext;
+        document.body.appendChild(a); a.click(); a.remove();
+        btn.disabled = false;
+        status.textContent = 'Klaar. Je video staat in je downloads (' + ext + ').';
+      };
+      btn.disabled = true;
+      status.textContent = 'Bezig met opnemen...';
+      t0 = performance.now();
+      rec.start();
+      setTimeout(function () { rec.stop(); }, clip.duration * 1000 + 200);
+    });
+  }
+})();
+</script>
+</body>
+</html>

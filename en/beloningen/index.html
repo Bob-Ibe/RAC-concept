@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rewards · Rise Above Creators</title>
+<link rel="icon" href="../../assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/main.css">
+</head>
+<body data-root="../../" data-page="beloningen" data-path="beloningen/index.html">
+<div data-header></div>
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow" data-balance></span>
+      <h1>Rewards</h1>
+      <p class="lead">Trade your points for climbing credit. You get a voucher with a code. Show it at reception.</p>
+    </div>
+  </section>
+  <section class="section section--tight">
+    <div class="container">
+      <div class="grid grid--3" data-rewards></div>
+      <div data-voucher style="margin-top:28px"></div>
+    </div>
+  </section>
+</main>
+<div data-footer></div>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var wrap = document.querySelector('[data-rewards]');
+  function render() {
+    var st = RA.state;
+    document.querySelector('[data-balance]').textContent = st.user ? 'Your balance: ' + RA.fmt(st.points) + ' points' : 'Sign up first';
+    wrap.innerHTML = RA.REWARDS.map(function (r) {
+      var can = st.user && st.points >= r.cost;
+      return '<div class="card reward"><div><h3>' + RA.esc(r.title) + '</h3><p class="muted">' + RA.esc(r.note) + '</p></div>' +
+        '<div><div class="cost">' + RA.fmt(r.cost) + ' <small>POINTS</small></div>' +
+        (st.user ? '<div class="bar" style="margin:12px 0 16px"><span style="width:' + Math.min(100, st.points / r.cost * 100) + '%"></span></div>' : '<div style="height:16px"></div>') +
+        '<button class="btn ' + (can ? 'btn--solid' : '') + '" type="button" data-redeem="' + r.id + '"' + (can ? '' : ' disabled') + '>' + (can ? 'Redeem' : st.user ? RA.fmt(r.cost - st.points) + ' points to go' : 'Sign up') + '</button></div></div>';
+    }).join('');
+  }
+  render();
+  wrap.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-redeem]');
+    if (!b || b.disabled) return;
+    var r = RA.REWARDS.filter(function (x) { return x.id === b.getAttribute('data-redeem'); })[0];
+    if (!confirm('Redeem ' + r.title + ' for ' + r.cost + ' points?')) return;
+    var st = RA.state;
+    st.points -= r.cost;
+    var code = 'RAC-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+    st.vouchers.push({ title: r.title, code: code, date: new Date().toISOString().slice(0, 10) });
+    RA.save();
+    RA.refreshHeader();
+    render();
+    document.querySelector('[data-voucher]').innerHTML = '<div class="voucher">Show this voucher at reception<strong>' + code + '</strong>' + RA.esc(r.title) + '</div>';
+  });
+})();
+</script>
+</body>
+</html>

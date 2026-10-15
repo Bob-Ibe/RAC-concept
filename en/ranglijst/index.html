@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leaderboard · Rise Above Creators</title>
+<link rel="icon" href="../../assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/main.css">
+</head>
+<body data-root="../../" data-page="ranglijst" data-path="ranglijst/index.html">
+<div data-header></div>
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow" data-month></span>
+      <h1>Leaderboard</h1>
+      <p class="lead">This month's points. On the first of the month everyone starts from zero again. You keep the points you have saved.</p>
+    </div>
+  </section>
+  <section class="section section--tight">
+    <div class="container">
+      <div class="podium" data-podium></div>
+      <ol class="lb" data-lb></ol>
+      <p class="hint" style="margin-top:20px">Sample data: the other creators in this prototype are made up.</p>
+    </div>
+  </section>
+</main>
+<div data-footer></div>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var st = RA.state;
+  document.querySelector('[data-month]').textContent = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  var list = st.creators.map(function (c) { return { name: c.name, handle: c.handle, pts: c.points }; });
+  if (st.user) list.push({ name: st.user.name, handle: st.user.handle, pts: st.monthPoints, me: true });
+  list.sort(function (a, b) { return b.pts - a.pts || (a.me ? -1 : 1); });
+  document.querySelector('[data-podium]').innerHTML = list.slice(0, 3).map(function (c, i) {
+    return '<div class="p"><span class="pos">' + (i + 1) + '</span><strong>' + RA.esc(c.name) + (c.me ? ' (you)' : '') + '</strong><span>' + RA.fmt(c.pts) + ' points</span></div>';
+  }).join('');
+  document.querySelector('[data-lb]').innerHTML = list.map(function (c, i) {
+    return '<li class="' + (c.me ? 'me' : '') + '"><span class="pos">' + (i + 1) + '</span><span class="who"><strong>' + RA.esc(c.name) + (c.me ? ' (you)' : '') + '</strong><span>' + RA.esc(c.handle) + '</span></span><span class="pts">' + RA.fmt(c.pts) + '</span></li>';
+  }).join('');
+})();
+</script>
+</body>
+</html>

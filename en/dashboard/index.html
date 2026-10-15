@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My crew · Rise Above Creators</title>
+<link rel="icon" href="../../assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/css/main.css">
+</head>
+<body data-root="../../" data-page="dashboard" data-path="dashboard/index.html">
+<div data-header></div>
+<main data-main></main>
+<div data-footer></div>
+<script src="../../assets/js/app.js"></script>
+<script>
+(function () {
+  var main = document.querySelector('[data-main]');
+  var R = RA.RULES;
+
+  function signup() {
+    main.innerHTML =
+      '<section class="page-hero"><div class="container"><span class="eyebrow">Sign up</span><h1>Join</h1>' +
+      '<p class="lead">Do you climb at The Climbing Corner and post on Instagram now and then? Sign up, get your own code and start unlocking.</p></div></section>' +
+      '<section class="section section--tight"><div class="container split">' +
+      '<form class="card" data-signup novalidate>' +
+      '<div class="field"><label for="f-name">First name</label><input id="f-name" type="text" required autocomplete="given-name" maxlength="20"></div>' +
+      '<div class="field"><label for="f-ig">Instagram</label><input id="f-ig" type="text" required placeholder="@yourname" autocomplete="off" maxlength="40"></div>' +
+      '<label class="check"><input type="checkbox" required data-agree> <span>I know the rules: real views, respect in the gym, and points are climbing credit.</span></label>' +
+      '<p class="hint" data-err hidden></p>' +
+      '<button class="btn btn--solid" type="submit">Create my code</button>' +
+      '</form>' +
+      '<div class="rows"><div class="row"><div><strong>Your own code</strong><small>It is on your end card. New climbers mention it at reception.</small></div></div>' +
+      '<div class="row"><div><strong>A visual straight away</strong><small>The end card with your code is yours right away.</small></div></div>' +
+      '<div class="row"><div><strong>Points every month</strong><small>Submissions are checked at the end of the month and paid out in points.</small></div></div></div>' +
+      '</div></section>';
+    main.querySelector('[data-signup]').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = main.querySelector('#f-name').value.trim();
+      var ig = main.querySelector('#f-ig').value.trim();
+      var err = main.querySelector('[data-err]');
+      if (!name || !ig || !main.querySelector('[data-agree]').checked) { err.hidden = false; err.textContent = 'Fill in your name and Instagram and tick the rules.'; return; }
+      if (ig.charAt(0) !== '@') ig = '@' + ig;
+      var base = name.toUpperCase().normalize('NFD').replace(/[^A-Z]/g, '').slice(0, 8) || 'CREW';
+      var taken = RA.state.creators.map(function (c) { return c.code; });
+      var code = base;
+      if (taken.indexOf(code) !== -1) code = base + (10 + Math.floor(Math.random() * 89));
+      RA.state.user = { name: name, handle: ig, code: code };
+      RA.save();
+      RA.refreshHeader();
+      RA.toast('Welcome to the crew, ' + name);
+      dash();
+      window.scrollTo(0, 0);
+    });
+  }
+
+  function statusBadge(s) {
+    if (s.status === 'approved') return '<span class="badge badge--ok">+' + s.points + ' points</span>';
+    if (s.status === 'rejected') return '<span class="badge badge--no">Rejected</span>';
+    return '<span class="badge">Being checked</span>';
+  }
+
+  function dash() {
+    var st = RA.state, u = st.user;
+    var unlocked = st.unlocked.length;
+    var capPct = Math.min(100, st.monthPoints / R.monthCap * 100);
+    var nextReward = RA.REWARDS.filter(function (r) { return r.cost > st.points; })[0];
+    main.innerHTML =
+      '<section class="page-hero"><div class="container"><span class="eyebrow">' + RA.esc(u.handle) + '</span><h1>Hi ' + RA.esc(u.name) + '</h1></div></section>' +
+      '<section class="section section--tight"><div class="container stack">' +
+      '<div class="grid grid--3">' +
+        '<div class="card card--ink"><div class="stat"><span class="mono">Points</span><span class="big">' + RA.fmt(st.points) + '</span>' +
+          '<span class="mono">' + (nextReward ? (nextReward.cost - st.points) + ' to go for a ' + RA.esc(nextReward.title.toLowerCase()) : 'You can redeem everything') + '</span></div></div>' +
+        '<div class="card"><div class="stat"><span class="mono">This month</span><span class="big">' + st.monthPoints + '<span style="font-size:.4em"> / ' + R.monthCap + '</span></span><div class="bar" style="margin-top:8px"><span style="width:' + capPct + '%"></span></div></div></div>' +
+        '<div class="card"><div class="stat"><span class="mono">New climbers via you</span><span class="big">' + st.visitors + '</span><span class="mono">' + R.newVisitor + ' points per person</span></div></div>' +
+      '</div>' +
+      '<div class="card"><div class="split" style="align-items:center">' +
+        '<div><span class="eyebrow">Your code</span><div class="code-box"><strong>' + RA.esc(u.code) + '</strong><button class="btn btn--small" type="button" data-copy>Copy</button></div>' +
+        '<p class="hint" style="margin-top:10px">Say in your video: "First time climbing? Mention ' + RA.esc(u.code) + ' at reception." Your end card does the rest.</p></div>' +
+        '<div class="btn-row"><a class="btn btn--solid" href="../kluis/index.html">Download end card</a><a class="btn" href="../spellen/index.html">Games (' + unlocked + '/' + RA.VAULT.length + ' visuals)</a></div>' +
+      '</div></div>' +
+      '<div class="split">' +
+        '<form class="card" data-submit novalidate><h3>Submit a video</h3><p class="hint">Send in your Reel once it has been online for a few days. At the end of the month the gym reviews all submissions.</p>' +
+          '<div class="field"><label for="s-url">Link to your Reel</label><input id="s-url" type="url" required placeholder="https://www.instagram.com/reel/..."></div>' +
+          '<div class="field"><label for="s-views">Number of views (from your insights)</label><input id="s-views" type="number" min="0" step="1" required inputmode="numeric" placeholder="for example 4200"></div>' +
+          '<div class="field"><label for="s-shot">Screenshot of your insights</label><input id="s-shot" type="file" accept="image/*"><span class="hint">In this prototype the screenshot stays on your own device.</span></div>' +
+          '<label class="check"><input type="checkbox" data-tag> <span>I tagged @the_climbingcorner or posted the video as a collaboration (+' + Math.round(R.tagBonus * 100) + '%).</span></label>' +
+          '<div class="calc" data-calc>Enter your views for an estimate.</div>' +
+          '<p class="hint" data-serr hidden></p>' +
+          '<button class="btn btn--solid" type="submit">Submit</button>' +
+        '</form>' +
+        '<div class="card"><h3>My submissions</h3><ul class="list" data-subs></ul></div>' +
+      '</div>' +
+      (st.vouchers.length ? '<div class="card"><h3>My vouchers</h3><ul class="list">' + st.vouchers.map(function (v) { return '<li><div><span class="url">' + RA.esc(v.title) + '</span><div class="meta">' + v.date + '</div></div><span class="badge">' + v.code + '</span></li>'; }).join('') + '</ul></div>' : '') +
+      '</div></section>';
+
+    var subs = main.querySelector('[data-subs]');
+    subs.innerHTML = st.submissions.length ? st.submissions.slice().reverse().map(function (s) {
+      return '<li><div><span class="url">' + RA.esc(s.url) + '</span><div class="meta">' + s.date + ' · ' + RA.fmt(s.views) + ' views' + (s.tagged ? ' · tagged' : '') + '</div></div>' + statusBadge(s) + '</li>';
+    }).join('') : '<li><span class="hint">Nothing submitted yet.</span></li>';
+
+    main.querySelector('[data-copy]').addEventListener('click', function () {
+      try { navigator.clipboard.writeText(u.code); RA.toast('Code copied'); } catch (e) { RA.toast(u.code); }
+    });
+
+    var form = main.querySelector('[data-submit]'), calc = main.querySelector('[data-calc]');
+    function updateCalc() {
+      var v = parseInt(form.querySelector('#s-views').value, 10);
+      if (!v) { calc.textContent = 'Enter your views for an estimate.'; return; }
+      var p = RA.pointsFor(v, form.querySelector('[data-tag]').checked);
+      calc.textContent = 'Estimate: ' + p + ' points after approval (' + RA.euro(p * R.pointValue) + ' climbing credit).';
+    }
+    form.addEventListener('input', updateCalc);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var url = form.querySelector('#s-url').value.trim(), views = parseInt(form.querySelector('#s-views').value, 10);
+      var err = form.querySelector('[data-serr]');
+      if (!/^https?:\/\/(www\.)?instagram\.com\//i.test(url)) { err.hidden = false; err.textContent = 'Paste an Instagram link.'; return; }
+      if (!views || views < 1) { err.hidden = false; err.textContent = 'Enter the number of views.'; return; }
+      st.submissions.push({ id: 'u' + Date.now(), url: url, views: views, tagged: form.querySelector('[data-tag]').checked, status: 'pending', date: new Date().toISOString().slice(0, 10) });
+      RA.save();
+      RA.toast('Submitted. The gym will take a look.');
+      dash();
+    });
+  }
+
+  if (RA.state.user) dash(); else signup();
+})();
+</script>
+</body>
+</html>
