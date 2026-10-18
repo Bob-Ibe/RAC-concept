@@ -16,13 +16,12 @@
     <div class="container">
       <span class="eyebrow" data-count></span>
       <h1>De kluis</h1>
-      <p class="lead">Motion-video's van The Climbing Corner, staand formaat (1080 × 1920) voor Reels en TikTok. Speel ze vrij in de spellen en download ze voor je eigen video's.</p>
+      <p class="lead">Motion-video's van The Climbing Corner, staand formaat (1080 × 1920) voor Reels en TikTok. Bekijk ze allemaal, speel ze vrij in de spellen en download ze voor je eigen video's.</p>
     </div>
   </section>
   <section class="section section--tight">
     <div class="container">
-      <div class="grid grid--4" data-vault></div>
-      <p class="hint" style="margin-top:28px">Green screen-visuals: zet ze als laag boven je video en gebruik chroma key (CapCut: Uitknippen → Chroma key) om het groen weg te halen.</p>
+      <div data-vault></div>
     </div>
   </section>
 </main>
@@ -54,18 +53,28 @@
   function render() {
     var open = RA.VAULT.filter(function (v) { return RA.isUnlocked(v.id); }).length;
     document.querySelector('[data-count]').textContent = open + ' van ' + RA.VAULT.length + ' vrijgespeeld';
-    grid.innerHTML = RA.VAULT.map(function (v) {
+    var groups = [
+      { id: 'mat', title: 'Haal mensen naar de hal', text: 'Visuals met een uitnodiging erin. Zet ze aan het eind van je video.' },
+      { id: 'logo', title: 'Logo-animaties', text: 'Het logo van de hal in zes stijlen, voor je intro, outro of overgang.' }
+    ];
+    grid.innerHTML = groups.map(function (g) {
+      var items = RA.VAULT.filter(function (v) { return v.group === g.id; });
+      return '<div class="vault-group"><div class="vault-group-head"><h2>' + g.title + '</h2><p class="muted">' + g.text + '</p></div><div class="grid grid--4">' +
+        items.map(card).join('') + '</div></div>';
+    }).join('');
+  }
+  function card(v) {
       var unlocked = RA.isUnlocked(v.id);
       var how = v.game ? RA.tierText(v.tier, v.game) + ' in ' + v.game.title : '';
       return '<article class="card vault-item' + (unlocked ? '' : ' is-locked') + '">' +
-        '<button class="media" type="button" data-open="' + v.id + '" aria-label="' + RA.esc(v.title) + (unlocked ? ' bekijken' : ' is nog op slot') + '">' +
+        '<button class="media" type="button" data-open="' + v.id + '" aria-label="' + RA.esc(v.title) + (unlocked ? ' bekijken' : ' bekijken, nog op slot') + '">' +
         '<img src="' + v.poster + '" alt="" loading="lazy">' +
-        (unlocked ? '<span class="tag">' + (v.personal ? 'Jouw code' : 'Vrijgespeeld') + '</span><span class="play">' + playSvg + '</span>'
+        (unlocked ? '<span class="tag">' + (v.personal ? 'Jouw code' : 'Vrijgespeeld') + '</span>'
                   : '<span class="lock">' + lockSvg + '<span>' + RA.esc(how) + '</span></span>') +
+        '<span class="play">' + playSvg + '</span>' +
         '</button>' +
         '<div class="body"><h3>' + RA.esc(v.title) + '</h3><p>' + RA.esc(v.kind) + '</p><span class="credit">' + v.credit + '</span></div>' +
         '</article>';
-    }).join('');
   }
   render();
 
@@ -91,8 +100,8 @@
     modal.querySelector('[data-m-credit]').textContent = v.credit;
     modal.querySelector('[data-m-note]').textContent = v.note;
     if (!RA.isUnlocked(v.id)) {
-      media.innerHTML = '<img src="' + v.poster + '" alt="" style="filter:blur(14px) grayscale(1) brightness(.6);width:100%;aspect-ratio:9/16;object-fit:cover">';
-      extra.innerHTML = '<p><strong>Nog op slot.</strong> ' + RA.esc(RA.tierText(v.tier, v.game)) + ' in ' + RA.esc(v.game.title) + '.</p>' +
+      media.innerHTML = '<video src="' + v.src + '" poster="' + v.poster + '" autoplay muted loop playsinline controls></video>';
+      extra.innerHTML = '<p><strong>Nog op slot.</strong> ' + 'Kijken mag al. Downloaden kan als je hem vrijspeelt: ' + RA.esc(RA.tierText(v.tier, v.game).toLowerCase()) + ' in ' + RA.esc(v.game.title) + '.</p>' +
         '<a class="btn btn--solid" href="../spellen/' + v.game.id + '/index.html">Speel ' + RA.esc(v.game.title) + '</a>';
     } else if (v.personal) {
       openEndcard(v);

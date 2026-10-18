@@ -31,40 +31,40 @@
   ];
 
   var GAMES = [
-    { id: 'top-out', title: 'Top-out', unit: t('grepen', 'holds'), tiers: [{ min: 10, unlock: 'send-stempel' }, { min: 25, unlock: 'bob-botw-1' }],
+    { id: 'top-out', title: 'Top-out', unit: t('grepen', 'holds'), tiers: [{ min: 10, unlock: 'klim-mee' }, { min: 25, unlock: 'logo-neon' }],
       blurb: t('Klim van greep naar greep. Tik als je bereik goed staat, voordat je grip op is.', 'Climb from hold to hold. Tap when your reach lines up, before your grip runs out.') },
-    { id: 'beta', title: t('Beta van de dag', 'Beta of the Day'), unit: t('zetten', 'moves'), lowerIsBetter: true, tiers: [{ solve: true, unlock: 'overgang' }, { optimal: true, unlock: 'bob-papier' }],
+    { id: 'beta', title: t('Beta van de dag', 'Beta of the Day'), unit: t('zetten', 'moves'), lowerIsBetter: true, tiers: [{ solve: true, unlock: 'eerste-keer' }, { optimal: true, unlock: 'logo-code' }],
       blurb: t('Elke dag een nieuwe wand. Vind de route naar de top in zo min mogelijk zetten.', 'A new wall every day. Find the route to the top in as few moves as you can.') },
-    { id: 'pump', title: 'Pump', unit: t('zetten', 'moves'), tiers: [{ min: 30, unlock: 'poging-teller' }, { min: 60, unlock: 'bob-glow' }],
+    { id: 'pump', title: 'Pump', unit: t('zetten', 'moves'), tiers: [{ min: 30, unlock: 'poging-teller' }, { min: 60, unlock: 'logo-krijt' }],
       blurb: t('Links, rechts, links. Je onderarmen lopen vol. Rust op de grote grepen, maar de klok loopt door.', 'Left, right, left. Your forearms fill up. Rest on the big holds, but the clock keeps ticking.') },
-    { id: 'val-goed', title: t('Val goed', 'Fall Well'), unit: t('goed', 'clean landings'), tiers: [{ min: 3, unlock: 'bob-logo-hal' }, { min: 5, unlock: 'bob-munt' }],
+    { id: 'val-goed', title: t('Val goed', 'Fall Well'), unit: t('goed', 'clean landings'), tiers: [{ min: 3, unlock: 'logo-raster' }, { min: 5, unlock: 'logo-glitch' }],
       blurb: t('Vallen hoort erbij. Buig je knieën op het juiste moment en rol weg op de mat.', 'Falling is part of it. Bend your knees at the right moment and roll away on the mat.') },
-    { id: 'route-lezen', title: t('Route lezen', 'Read the Route'), unit: 'level', tiers: [{ min: 4, unlock: 'bob-botw-2' }, { min: 7, unlock: 'rise-opener' }],
+    { id: 'route-lezen', title: t('Route lezen', 'Read the Route'), unit: 'level', tiers: [{ min: 4, unlock: 'logo-strepen' }, { min: 7, unlock: 'rise-opener' }],
       blurb: t('Kijk hoe de route oplicht en klim hem daarna uit je hoofd na. Elke ronde een greep langer.', 'Watch the route light up, then climb it from memory. One hold longer every round.') }
   ];
 
   var IBE = 'Motion: IBE MOTION';
-  var GREEN = 'green screen';
+  /* vijf visuals die mensen naar de hal halen, zes logo-animaties */
   var VAULT = [
-    { id: 'eindkaart', title: t('Eindkaart met jouw code', 'End card with your code'), kind: 'Outro', free: true, personal: true, note: t('Altijd als laatste shot. Hier komen nieuwe bezoekers vandaan.', 'Always your last shot. This is where new visitors come from.') },
-    { id: 'send-stempel', title: t('SEND! stempel', 'SEND! stamp'), kind: 'Overlay · ' + GREEN, note: t('Leg over je top-out. Groen wegfilteren met chroma key.', 'Lay it over your top-out. Remove the green with chroma key.') },
-    { id: 'overgang', title: t('Corner-overgang', 'Corner transition'), kind: t('Overgang', 'Transition') + ' · ' + GREEN, note: t('Tussen twee shots. Groen wegfilteren met chroma key.', 'Between two shots. Remove the green with chroma key.') },
-    { id: 'poging-teller', title: t('Poging-teller', 'Attempt counter'), kind: t('Intro of outro', 'Intro or outro'), note: t('Voor dat ene project dat je eindelijk haalt.', 'For that one project you finally send.') },
-    { id: 'rise-opener', title: 'Rise Above opener', kind: 'Intro', note: t('Zet aan het begin van je video.', 'Put it at the start of your video.') },
-    { id: 'bob-botw-1', title: 'Boulder of the Week', kind: 'Intro', note: t('Voor je wekelijkse favoriete boulder.', 'For your favourite boulder of the week.') },
-    { id: 'bob-botw-2', title: t('Boulder of the Week, scherven', 'Boulder of the Week, shards'), kind: 'Intro', note: t('Dezelfde titel, met losspringende scherven.', 'The same title, breaking into shards.') },
-    { id: 'bob-glow', title: t('Gloeiend logo', 'Glowing logo'), kind: t('Intro of outro', 'Intro or outro'), note: t('Het logo licht op in het donker.', 'The logo lights up in the dark.') },
-    { id: 'bob-logo-hal', title: t('Logo in de hal', 'Logo in the gym'), kind: t('Overgang', 'Transition'), note: t('Het gloeiende logo over beelden uit de hal.', 'The glowing logo over footage from the gym.') },
-    { id: 'bob-papier', title: t('Papieren logo', 'Paper logo'), kind: 'Intro', note: t('Het logo als uitgeknipt papier.', 'The logo as cut-out paper.') },
-    { id: 'bob-munt', title: t('Chromen munt', 'Chrome coin'), kind: t('Intro of outro', 'Intro or outro'), note: t('Het logo als draaiende metalen munt.', 'The logo as a spinning metal coin.') }
+    { id: 'eindkaart', title: t('Eindkaart met jouw code', 'End card with your code'), kind: 'Outro', group: 'mat', free: true, personal: true, note: t('Altijd als laatste shot. Hier komen nieuwe bezoekers vandaan.', 'Always your last shot. This is where new visitors come from.') },
+    { id: 'eerste-keer', title: t('Nog nooit geboulderd?', 'Never bouldered?'), kind: 'Outro', group: 'mat', note: t('Voor vrienden die nog nooit geklommen hebben. Sluit af met de introductieles.', 'For friends who have never climbed. Ends with the intro session.') },
+    { id: 'klim-mee', title: t('Wie gaat er mee?', "Who's coming?"), kind: 'Outro', group: 'mat', note: t('Zet hem aan het eind en tag een maat die mee moet.', 'Put it at the end and tag a friend who should come along.') },
+    { id: 'poging-teller', title: t('Poging-teller', 'Attempt counter'), kind: t('Intro of outro', 'Intro or outro'), group: 'mat', note: t('Voor dat ene project dat je eindelijk haalt. Eindigt met: jouw beurt.', 'For that one project you finally send. Ends with: your turn.') },
+    { id: 'rise-opener', title: 'Rise Above opener', kind: 'Intro', group: 'mat', note: t('Zet aan het begin van je video.', 'Put it at the start of your video.') },
+    { id: 'logo-neon', title: t('Neon-logo', 'Neon logo'), kind: t('Intro of outro', 'Intro or outro'), group: 'logo', note: t('Het logo flikkert aan als een neonbord en kleurt van oranje naar rood.', 'The logo flickers on like a neon sign and turns from orange to red.') },
+    { id: 'logo-krijt', title: t('Krijtwolk', 'Chalk cloud'), kind: 'Intro', group: 'logo', note: t('Een wolk magnesium die neerdaalt tot het logo.', 'A cloud of chalk that settles into the logo.') },
+    { id: 'logo-raster', title: t('Gedrukt logo', 'Print logo'), kind: t('Intro of outro', 'Intro or outro'), group: 'logo', note: t('Het logo in rasterpunten, als een zeefdrukposter.', 'The logo in halftone dots, like a screen-printed poster.') },
+    { id: 'logo-glitch', title: 'Glitch', kind: t('Overgang', 'Transition'), group: 'logo', note: t('Het logo hapert als een oude videoband.', 'The logo stutters like an old video tape.') },
+    { id: 'logo-code', title: t('Code-logo', 'Code logo'), kind: 'Intro', group: 'logo', note: t('Het logo bouwt zich op uit letters en tekens.', 'The logo builds itself out of characters.') },
+    { id: 'logo-strepen', title: t('Strepen-overgang', 'Stripe transition'), kind: t('Overgang', 'Transition'), group: 'logo', note: t('Het logo schuift in stroken binnen en weer weg.', 'The logo slides in and out in strips.') }
   ];
   /* visuals met tekst erin hebben een Engelse versie (bestandsnaam eindigt op -en) */
-  var LOCALIZED = ['eindkaart', 'poging-teller'];
+  var LOCALIZED = ['eindkaart', 'poging-teller', 'eerste-keer', 'klim-mee'];
   VAULT.forEach(function (v) {
     var file = v.id + (LANG === 'en' && LOCALIZED.indexOf(v.id) !== -1 ? '-en' : '');
     v.credit = IBE;
     v.src = root + 'assets/video/' + file + '.mp4';
-    v.download = v.id.indexOf('bob-') === 0 ? v.src : root + 'assets/video/' + file + '-1080.mp4';
+    v.download = root + 'assets/video/' + file + '-1080.mp4';
     v.poster = root + 'assets/poster/' + file + '.jpg';
     GAMES.forEach(function (g) {
       g.tiers.forEach(function (tier) { if (tier.unlock === v.id) { v.game = g; v.tier = tier; } });

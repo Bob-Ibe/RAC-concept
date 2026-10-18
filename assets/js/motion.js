@@ -5,8 +5,7 @@
   'use strict';
 
   var W = 1080, H = 1920;
-  var GREEN = '#00B140';
-  var DISPLAY = '"Archivo", "Arial Narrow", sans-serif';
+    var DISPLAY = '"Archivo", "Arial Narrow", sans-serif';
   var MONO = '"JetBrains Mono", ui-monospace, monospace';
 
   /* ---------- helpers ---------- */
@@ -240,121 +239,441 @@
       ctx.textAlign = 'center';
       ctx.fillText(o.lang === 'en' ? 'AFTER ' + goal + ' ATTEMPTS' : 'NA ' + goal + ' POGINGEN', 540, 1260);
       ctx.globalAlpha = 1;
+      var turn = prog(t, 4.9, 5.4);
+      ctx.globalAlpha = turn;
+      ctx.fillStyle = '#fff';
+      font(ctx, 800, 64, DISPLAY, 'condensed');
+      ctx.fillText(o.lang === 'en' ? 'YOUR TURN.' : 'JOUW BEURT.', 540, 1400 + (1 - outCubic(turn)) * 30);
+      ctx.globalAlpha = 1;
       logoReveal(ctx, o.logoWhite, 540, 1620, 150, prog(t, 4.6, 5.2));
+      ctx.globalAlpha = prog(t, 5.2, 5.6);
+      font(ctx, 500, 30, MONO);
+      ctx.fillText('THE CLIMBING CORNER  ·  HEERLEN', 540, 1770);
+      ctx.globalAlpha = 1;
       grain(ctx, t, 0.12 * wp);
     }
   }
 
-  /* ---------- 3. SEND! stempel (green screen) ---------- */
-  function stamp(ctx, t, o) {
-    ctx.fillStyle = GREEN;
+  /* ---------- logo-hulpjes: maskers, contouren en kleuren uit de logo-png ---------- */
+  var cache = {};
+  function canvas(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h || w; return c; }
+  /* alfa van het logo op een raster van n x n (0..1) */
+  function logoMask(img, n) {
+    var key = 'mask' + n;
+    if (cache[key]) return cache[key];
+    var c = canvas(n), g = c.getContext('2d');
+    g.drawImage(img, 0, 0, n, n);
+    var d = g.getImageData(0, 0, n, n).data, a = new Float32Array(n * n);
+    for (var i = 0; i < n * n; i++) a[i] = d[i * 4 + 3] / 255;
+    return (cache[key] = { n: n, a: a, at: function (u, v) {
+      if (u < 0 || v < 0 || u >= 1 || v >= 1) return 0;
+      return a[Math.floor(v * n) * n + Math.floor(u * n)];
+    } });
+  }
+  /* alleen de randen van de logovlakken, voor neonbuizen */
+  function logoOutline(img, size, th) {
+    var key = 'out' + size + '-' + th;
+    if (cache[key]) return cache[key];
+    var full = canvas(size), g = full.getContext('2d');
+    g.drawImage(img, 0, 0, size, size);
+    var er = canvas(size), e = er.getContext('2d');
+    e.drawImage(img, 0, 0, size, size);
+    e.globalCompositeOperation = 'destination-in';
+    for (var i = 0; i < 16; i++) { var a = i / 16 * Math.PI * 2; e.drawImage(img, Math.cos(a) * th, Math.sin(a) * th, size, size); }
+    g.globalCompositeOperation = 'destination-out';
+    g.drawImage(er, 0, 0);
+    return (cache[key] = full);
+  }
+  /* kleur een (witte) vorm in; per bronmaat een herbruikbaar canvas */
+  function tint(src, color, slot) {
+    var key = 'tint' + (slot || '') + src.width;
+    var c = cache[key] || (cache[key] = canvas(src.width, src.height)), g = c.getContext('2d');
+    g.globalCompositeOperation = 'source-over';
+    g.clearRect(0, 0, c.width, c.height);
+    g.drawImage(src, 0, 0, c.width, c.height);
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = color;
+    g.fillRect(0, 0, c.width, c.height);
+    return c;
+  }
+  function mix(c1, c2, x) {
+    var a = [parseInt(c1.slice(1, 3), 16), parseInt(c1.slice(3, 5), 16), parseInt(c1.slice(5, 7), 16)];
+    var b = [parseInt(c2.slice(1, 3), 16), parseInt(c2.slice(3, 5), 16), parseInt(c2.slice(5, 7), 16)];
+    return 'rgb(' + a.map(function (v, i) { return Math.round(lerp(v, b[i], x)); }).join(',') + ')';
+  }
+  function smooth(x) { x = clamp(x); return x * x * (3 - 2 * x); }
+
+  /* ---------- 3. Nog nooit gebouldered? (naar de mat) ---------- */
+  function firstTime(ctx, t, o) {
+    var en = o.lang === 'en';
+    ctx.fillStyle = '#f4f4f2';
     ctx.fillRect(0, 0, W, H);
-
-    var hit = 0.42;
-    var inP = prog(t, 0.12, hit);
-    var outP = prog(t, 2.45, 2.75);
-    if (inP <= 0 || outP >= 1) return;
-
-    var shakeAmt = t > hit ? Math.max(0, 1 - (t - hit) / 0.4) : 0;
-    var sx = Math.sin(t * 90) * 22 * shakeAmt, sy = Math.cos(t * 70) * 16 * shakeAmt;
-
-    /* stralen */
-    var rp = prog(t, hit, hit + 0.5);
-    if (rp > 0 && rp < 1) {
-      ctx.save();
-      ctx.translate(540 + sx, 960 + sy);
-      ctx.strokeStyle = '#0a0a0a';
-      ctx.lineCap = 'round';
-      ctx.lineWidth = 18 * (1 - rp);
-      for (var i = 0; i < 14; i++) {
-        var a = (i / 14) * Math.PI * 2 + 0.2;
-        var r1 = lerp(360, 560, outCubic(rp)), r2 = lerp(420, 760, outCubic(rp));
-        ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
-        ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    /* krijtwolk */
-    if (t > hit) {
-      var r = rng(42), dt = t - hit;
-      for (var k = 0; k < 70; k++) {
-        var ang = r() * Math.PI * 2, sp = 500 + r() * 1300, sz = 4 + r() * 16;
-        var d = sp * (1 - Math.exp(-dt * 3)) / 3;
-        var al = Math.max(0, 1 - dt / (0.7 + r() * 0.9));
-        if (al <= 0) continue;
-        ctx.globalAlpha = al;
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(540 + Math.cos(ang) * d + sx, 960 + Math.sin(ang) * d + sy + dt * dt * 260, sz, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    var s = lerp(2.8, 1, outCubic(inP)) * (1 - inBack(outP));
-    ctx.save();
-    ctx.translate(540 + sx, 960 + sy);
-    ctx.rotate(-0.1);
-    ctx.scale(s, s);
-    ctx.globalAlpha = clamp(inP * 2);
-    /* kader */
     ctx.fillStyle = '#0a0a0a';
-    ctx.fillRect(-430, -250, 860, 500);
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 14;
-    ctx.strokeRect(-400, -220, 800, 440);
-    font(ctx, 800, 330, DISPLAY, 'condensed');
-    ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText('SEND!', 0, 115, 740);
-    font(ctx, 500, 30, MONO);
-    ctx.fillText('THE CLIMBING CORNER', 0, 185);
-    ctx.restore();
+    var lab = prog(t, 0.05, 0.5);
+    ctx.globalAlpha = lab;
+    font(ctx, 500, 34, MONO);
+    ctx.fillText('THE CLIMBING CORNER  ·  HEERLEN', 540, 300);
+    ctx.globalAlpha = 1;
+    maskedLine(ctx, en ? 'NEVER' : 'NOG NOOIT', 540, 820, 250, prog(t, 0.2, 0.8), '#0a0a0a');
+    maskedLine(ctx, en ? 'BOULDERED?' : 'GEBOULDERD?', 540, 1060, 250, prog(t, 0.4, 1.0), '#0a0a0a');
+    /* drie grepen als vraagteken-ritme */
+    for (var i = 0; i < 3; i++) hold(ctx, 380 + i * 160, 1300, 46, i * 1.7, outBack(prog(t, 0.9 + i * 0.12, 1.25 + i * 0.12)), '#0a0a0a');
+
+    /* zwart vlak schuift omhoog met het antwoord */
+    var wp = inOutCubic(prog(t, 1.9, 2.4));
+    if (wp > 0) {
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, H * (1 - wp), W, H * wp);
+    }
+    if (t > 2.3) {
+      logoReveal(ctx, o.logoWhite, 540, 600, 260, prog(t, 2.35, 2.95));
+      maskedLine(ctx, en ? 'COME AND' : 'KOM HET', 540, 1030, 250, prog(t, 2.45, 3.05), '#fff');
+      maskedLine(ctx, en ? 'TRY IT.' : 'PROBEREN.', 540, 1270, 250, prog(t, 2.6, 3.2), '#fff');
+      var dl = outCubic(prog(t, 3.1, 3.5));
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(540 - 380 * dl, 1360, 760 * dl, 4);
+      var lines = en ? ['INTRO SESSION ON SATURDAYS', 'SHOES INCLUDED', 'IN DE CRAMER 14  ·  HEERLEN']
+                     : ['INTRODUCTIELES OP ZATERDAG', 'SCHOENEN INBEGREPEN', 'IN DE CRAMER 14  ·  HEERLEN'];
+      font(ctx, 500, 36, MONO);
+      lines.forEach(function (l, k) {
+        var p = prog(t, 3.3 + k * 0.15, 3.8 + k * 0.15);
+        ctx.globalAlpha = p;
+        ctx.fillText(l, 540, 1450 + k * 60 + (1 - outCubic(p)) * 24);
+      });
+      ctx.globalAlpha = 1;
+      grain(ctx, t, 0.12 * wp);
+    }
   }
 
-  /* ---------- 4. Overgang (green screen) ---------- */
-  function wipe(ctx, t, o) {
-    ctx.fillStyle = GREEN;
+  /* ---------- 4. Wie gaat er mee? (naar de mat) ---------- */
+  function bringFriend(ctx, t, o) {
+    var en = o.lang === 'en';
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, W, H);
+    /* grepen ploppen op rond de kop */
+    var r = rng(5);
+    for (var i = 0; i < 14; i++) {
+      var x = 90 + r() * 900, y = 200 + r() * 1500, sz = 26 + r() * 40, at = 0.1 + r() * 0.9;
+      if (y > 560 && y < 1300) continue;
+      ctx.globalAlpha = 0.9;
+      hold(ctx, x, y + Math.sin(t * 1.6 + i) * 8, sz, r() * 6, outBack(prog(t, at, at + 0.35)), i % 4 === 0 ? '#fff' : '#3a3a3a');
+    }
+    ctx.globalAlpha = 1;
+    maskedLine(ctx, en ? "WHO'S" : 'WIE GAAT', 540, 820, 270, prog(t, 0.3, 0.9), '#fff');
+    maskedLine(ctx, en ? 'COMING?' : 'ER MEE?', 540, 1080, 270, prog(t, 0.45, 1.05), '#fff');
+
+    /* tag-balk die zichzelf typt */
+    var bp = outBack(prog(t, 1.4, 1.9));
+    if (bp > 0) {
+      var bw = 840, bh = 150, bx = 540 - bw / 2, by = 1180;
+      ctx.save();
+      ctx.translate(540, by + bh / 2);
+      ctx.scale(bp, bp);
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(-bw / 2, -bh / 2, bw, bh, 75); else ctx.rect(-bw / 2, -bh / 2, bw, bh);
+      ctx.fill();
+      ctx.fillStyle = '#0a0a0a';
+      font(ctx, 800, 72, DISPLAY, 'semi-expanded');
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('@', -bw / 2 + 56, 4);
+      var msg = en ? 'TAG YOUR CLIMBING BUDDY' : 'TAG JE KLIMMAATJE';
+      var n = Math.floor(msg.length * prog(t, 1.9, 2.9) + 0.0001);
+      font(ctx, 500, en ? 38 : 44, MONO);
+      var txt = msg.slice(0, n);
+      ctx.fillText(txt, -bw / 2 + 140, 4);
+      if (Math.floor(t * 5) % 2 === 0) ctx.fillRect(-bw / 2 + 146 + ctx.measureText(txt).width, -26, 5, 56);
+      ctx.restore();
+      ctx.textBaseline = 'alphabetic';
+    }
+    var lp = prog(t, 3.0, 3.6);
+    logoReveal(ctx, o.logoWhite, 540, 1560, 170, lp);
+    ctx.globalAlpha = prog(t, 3.3, 3.8);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    font(ctx, 500, 34, MONO);
+    ctx.fillText(en ? 'CLIMB TOGETHER  ·  HEERLEN' : 'SAMEN KLIMMEN  ·  HEERLEN', 540, 1730);
+    ctx.globalAlpha = 1;
+    grain(ctx, t, 0.12);
+  }
+
+  /* ---------- 6. Neon-logo ---------- */
+  function neonLogo(ctx, t, o) {
+    var size = 760, cx = 540, cy = 860;
+    /* aanflikkeren, zoemen, uitvallen */
+    var lvl;
+    if (t < 0.35) lvl = 0;
+    else if (t < 1.4) lvl = rng(Math.floor(t * 18))() < lerp(0.25, 0.9, prog(t, 0.35, 1.4)) ? 1 : 0.12;
+    else if (t < 4.0) lvl = 0.94 + 0.06 * Math.sin(t * 47) * Math.sin(t * 13);
+    else lvl = rng(Math.floor(t * 22) + 3)() < lerp(0.8, 0.1, prog(t, 4.0, 4.4)) ? 0.8 : 0.05;
+    if (t > 4.4) lvl = 0;
+    var col = mix('#ffb03a', '#ff2a1a', smooth(prog(t, 2.2, 2.9)));
+
+    ctx.fillStyle = '#070707';
+    ctx.fillRect(0, 0, W, H);
+    /* gloed op de muur */
+    var halo = ctx.createRadialGradient(cx, cy, 50, cx, cy, 900);
+    halo.addColorStop(0, col.replace('rgb', 'rgba').replace(')', ',' + (0.32 * lvl) + ')'));
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = halo;
     ctx.fillRect(0, 0, W, H);
 
-    var nx = Math.cos(-0.95), ny = Math.sin(-0.95); /* richting: naar rechtsboven */
-    var corners = [[0, 0], [W, 0], [0, H], [W, H]].map(function (c) { return c[0] * nx + c[1] * ny; });
-    var mn = Math.min.apply(null, corners), mx = Math.max.apply(null, corners), span = mx - mn;
+    var tube = logoOutline(o.logoWhite, size, 9);
+    var lit = tint(tube, col, 'neon');
+    function sign(y, alpha, flip) {
+      ctx.save();
+      ctx.translate(cx, y);
+      if (flip) ctx.scale(1, -1);
+      ctx.globalAlpha = alpha * Math.max(lvl, 0.05);
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 90;
+      ctx.drawImage(lit, -size / 2, -size / 2);
+      ctx.shadowBlur = 30;
+      ctx.drawImage(lit, -size / 2, -size / 2);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = alpha * lvl * 0.85;
+      ctx.drawImage(tint(tube, '#fff2e8', 'core'), -size / 2, -size / 2);
+      ctx.restore();
+    }
+    sign(cy, 1, false);
+    /* weerspiegeling in een natte vloer */
+    var fy = cy + size / 2 + 150;
+    sign(fy + size / 2 + 40, 0.22, true);
+    var fade = ctx.createLinearGradient(0, fy, 0, H);
+    fade.addColorStop(0, 'rgba(7,7,7,0.2)');
+    fade.addColorStop(0.6, 'rgba(7,7,7,1)');
+    ctx.fillStyle = fade;
+    ctx.fillRect(0, fy, W, H - fy);
+    ctx.fillStyle = col.replace('rgb', 'rgba').replace(')', ',' + (0.25 * lvl) + ')');
+    ctx.fillRect(140, fy, 800, 2);
+    grain(ctx, t, 0.14);
+  }
 
-    function band(a, b, color) {
-      if (b <= a) return;
-      var tx = -ny, ty = nx, L = 4000;
+  /* ---------- 7. Krijtwolk ---------- */
+  var chalk = null;
+  function chalkCloud(ctx, t, o) {
+    var size = 800, cx = 540, cy = 880;
+    if (!chalk) {
+      var m = logoMask(o.logoWhite, 200), r = rng(21), pts = [];
+      for (var v = 0; v < 200; v++) for (var u = 0; u < 200; u++) if (m.a[v * 200 + u] > 0.5) pts.push([u, v]);
+      chalk = [];
+      for (var i = 0; i < 3200; i++) {
+        var p = pts[Math.floor(r() * pts.length)], ang = r() * Math.PI * 2, dist = 60 + Math.pow(r(), 1.6) * 720;
+        chalk.push({
+          tx: cx - size / 2 + (p[0] + r()) / 200 * size, ty: cy - size / 2 + (p[1] + r()) / 200 * size,
+          bx: cx + Math.cos(ang) * dist, by: cy + 380 + Math.sin(ang) * dist * 0.75 - r() * 300,
+          d: r() * 0.7, s: 2 + r() * 4, a: 0.45 + r() * 0.5, drift: r()
+        });
+      }
+    }
+    ctx.fillStyle = '#0b0b0b';
+    ctx.fillRect(0, 0, W, H);
+    var puff = outExpo(prog(t, 0.15, 1.0)), lock = prog(t, 3.0, 3.6);
+    var clap = prog(t, 0.1, 0.5);
+    if (clap > 0 && clap < 1) {
+      var g = ctx.createRadialGradient(cx, cy + 380, 0, cx, cy + 380, 700 * clap);
+      g.addColorStop(0, 'rgba(255,255,255,' + 0.35 * (1 - clap) + ')');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
+    ctx.fillStyle = '#fff';
+    for (var k = 0; k < chalk.length; k++) {
+      var c = chalk[k];
+      var gp = inOutCubic(prog(t, 0.9 + c.d * 0.8, 2.2 + c.d * 0.8));
+      var sx = lerp(cx, c.bx, puff), sy = lerp(cy + 380, c.by, puff) - t * 30 * c.drift;
+      var x = lerp(sx, c.tx, gp) + Math.sin(t * 3 + k) * 3 * (1 - gp);
+      var y = lerp(sy, c.ty, gp);
+      ctx.globalAlpha = c.a * (1 - 0.85 * lock) * clamp(puff * 3);
+      ctx.fillRect(x, y, c.s, c.s);
+    }
+    ctx.globalAlpha = lock;
+    ctx.drawImage(o.logoWhite, cx - size / 2, cy - size / 2, size, size);
+    /* nastof die blijft hangen */
+    var r2 = rng(99);
+    for (var q = 0; q < 160; q++) {
+      var px = r2() * W, py = (r2() * H + t * (20 + r2() * 40)) % H;
+      ctx.globalAlpha = (0.08 + r2() * 0.2) * clamp(puff * 2);
+      ctx.fillRect(px, py, 2 + r2() * 3, 2 + r2() * 3);
+    }
+    ctx.globalAlpha = 1;
+    grain(ctx, t, 0.12);
+  }
+
+  /* ---------- 8. Gedrukt logo (rasterpunten) ---------- */
+  function halftone(ctx, t, o) {
+    var size = 900, cx = 540, cy = 900, s = 24, rot = 0.26;
+    var m = logoMask(o.logoWhite, 300);
+    ctx.fillStyle = '#efebe2';
+    ctx.fillRect(0, 0, W, H);
+    var front = lerp(0, 1500, outCubic(prog(t, 0.1, 1.4)));
+    var bg = 1 - smooth(prog(t, 1.4, 2.3));
+    var ripple = lerp(1, 0.25, prog(t, 1.0, 3.0));
+    var off = lerp(26, 6, outCubic(prog(t, 2.0, 3.0)));
+    var cr = Math.cos(rot), sr = Math.sin(rot), R = 1300;
+    function layer(color, dx, dy, show) {
+      if (show <= 0) return;
       ctx.fillStyle = color;
+      ctx.beginPath();
+      for (var j = -R; j <= R; j += s) {
+        for (var i = -R; i <= R; i += s) {
+          var x = cx + i * cr - j * sr, y = cy + i * sr + j * cr;
+          if (x < -20 || x > W + 20 || y < -20 || y > H + 20) continue;
+          var d = Math.hypot(x - cx, y - cy), on = smooth((front - d) / 160);
+          if (on <= 0) continue;
+          var a = m.at((x - cx + size / 2) / size, (y - cy + size / 2) / size);
+          var wave = 1 + 0.3 * ripple * Math.sin(d * 0.018 - t * 7);
+          var rad = Math.max(a * s * 0.62, (1 - a) * s * 0.2 * bg) * on * wave * show;
+          if (rad < 0.6) continue;
+          ctx.moveTo(x + dx + rad, y + dy);
+          ctx.arc(x + dx, y + dy, rad, 0, Math.PI * 2);
+        }
+      }
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'multiply';
+    layer('#ff4436', off, off * 0.7, prog(t, 1.6, 2.4));
+    layer('#141414', 0, 0, 1);
+    ctx.globalCompositeOperation = 'source-over';
+    grain(ctx, t, 0.1);
+  }
+
+  /* ---------- 9. Glitch ---------- */
+  var glitchFrame = null;
+  function glitch(ctx, t, o) {
+    var size = 720, cx = 540, cy = 900;
+    var F = glitchFrame || (glitchFrame = canvas(W, H)), g = F.getContext('2d');
+    var bursts = [[0, 0.45, 1], [1.2, 1.4, 0.6], [2.3, 2.7, 0.8], [3.4, 3.95, 1.2]];
+    var amt = 0;
+    bursts.forEach(function (b) { if (t >= b[0] && t < b[1]) amt = b[2]; });
+    var fr = Math.floor(t * 30), r = rng(fr * 7 + 1);
+    var k = amt * (0.4 + r() * 0.6);
+    var invert = t > 3.82 && t < 3.95;
+    var bgc = invert ? '#f4f4f2' : '#050505';
+    g.globalCompositeOperation = 'source-over';
+    g.fillStyle = bgc;
+    g.fillRect(0, 0, W, H);
+    var appear = t < 0.45 ? (r() < prog(t, 0, 0.45) ? 1 : 0.15) : 1;
+    var jx = (r() - 0.5) * 6;
+    if (k > 0 && !invert) {
+      g.globalCompositeOperation = 'lighter';
+      g.globalAlpha = appear;
+      g.drawImage(tint(o.logoWhite, '#ff2a2a', 'gr'), cx - size / 2 - 30 * k + jx, cy - size / 2, size, size);
+      g.drawImage(tint(o.logoWhite, '#00e5ff', 'gc'), cx - size / 2 + 30 * k + jx, cy - size / 2 + 6 * k, size, size);
+      g.globalCompositeOperation = 'source-over';
+      g.globalAlpha = 0.85 * appear;
+    } else g.globalAlpha = appear;
+    g.drawImage(invert ? o.logo : o.logoWhite, cx - size / 2 + jx * (k > 0 ? 1 : 0.2), cy - size / 2, size, size);
+    g.globalAlpha = 1;
+    ctx.drawImage(F, 0, 0);
+    /* verschoven stroken */
+    var n = Math.floor(k * 14);
+    for (var i = 0; i < n; i++) {
+      var y = r() * H, h = 8 + r() * 90, dx = (r() - 0.5) * 260 * k;
+      ctx.drawImage(F, 0, y, W, h, dx, y, W, h);
+    }
+    /* ruisblokken */
+    for (var q = 0; q < n; q++) {
+      ctx.fillStyle = r() < 0.5 ? '#fff' : '#ff2a2a';
+      ctx.globalAlpha = 0.6;
+      ctx.fillRect(r() * W, r() * H, 20 + r() * 160, 4 + r() * 14);
+    }
+    ctx.globalAlpha = 1;
+    /* rolbalk en scanlijnen */
+    var by = ((t * 0.45) % 1) * (H + 300) - 150;
+    var bar = ctx.createLinearGradient(0, by - 150, 0, by + 150);
+    bar.addColorStop(0, 'rgba(255,255,255,0)'); bar.addColorStop(0.5, 'rgba(255,255,255,0.06)'); bar.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = bar;
+    ctx.fillRect(0, by - 150, W, 300);
+    ctx.fillStyle = invert ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.35)';
+    for (var sy = 0; sy < H; sy += 6) ctx.fillRect(0, sy, W, 2);
+    grain(ctx, t, 0.16);
+  }
+
+  /* ---------- 10. Code-logo (tekens) ---------- */
+  var asciiCells = null;
+  function asciiLogo(ctx, t, o) {
+    var cw = 15, ch = 26, cols = Math.ceil(W / cw), rows = Math.ceil(H / ch);
+    var size = 960, cx = 540, cy = 900, ramp = ' .:-=+*#%@', noise = '01<>/\\|#%&$*+=';
+    if (!asciiCells) {
+      var m = logoMask(o.logoWhite, 300), r = rng(3);
+      asciiCells = [];
+      for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++) {
+        var u = (x * cw + cw / 2 - cx + size / 2) / size, v = (y * ch + ch / 2 - cy + size / 2) / size;
+        var a = (m.at(u, v) + m.at(u + 0.004, v) + m.at(u, v + 0.006) + m.at(u + 0.004, v + 0.006)) / 4;
+        asciiCells.push({ x: x * cw, y: y * ch + ch * 0.8, row: y, a: a, rnd: r(), ch: ramp[Math.min(9, Math.round(a * 9))] });
+      }
+    }
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+    font(ctx, 500, 24, MONO);
+    ctx.textAlign = 'left';
+    var front = lerp(-6, rows + 6, inOutCubic(prog(t, 0.2, 2.6)));
+    var fr = Math.floor(t * 20);
+    for (var i = 0; i < asciiCells.length; i++) {
+      var c = asciiCells[i], dist = c.row - front + c.rnd * 6;
+      var glyph, alpha, color = '#fff';
+      if (dist > 6) { if (c.rnd < 0.035) { glyph = '.'; alpha = 0.18; } else continue; }
+      else if (dist > 0) { glyph = noise[(fr + i) % noise.length]; alpha = c.a > 0 ? 0.9 : 0.25; color = dist < 2 ? '#ff3b2f' : '#fff'; }
+      else {
+        if (c.a < 0.05) { if (c.rnd < 0.05) { glyph = '.'; alpha = 0.2; } else continue; }
+        else {
+          glyph = c.ch; alpha = 0.35 + c.a * 0.65;
+          /* golf van licht na het opbouwen */
+          var wv = Math.sin((c.x + c.y) * 0.006 - t * 4);
+          if (t > 2.8 && wv > 0.93) { glyph = '@'; color = '#ff3b2f'; alpha = 1; }
+        }
+      }
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+      ctx.fillText(glyph, c.x, c.y);
+    }
+    ctx.globalAlpha = 1;
+    grain(ctx, t, 0.1);
+  }
+
+  /* ---------- 11. Strepen-overgang ---------- */
+  function stripes(ctx, t, o) {
+    var size = 780, cx = 540, cy = 960, N = 16, sh = size / N;
+    ctx.fillStyle = '#f4f4f2';
+    ctx.fillRect(0, 0, W, H);
+    function strips(img, dir) {
+      for (var k = 0; k < N; k++) {
+        var side = k % 2 ? 1 : -1;
+        var pin = outExpo(prog(t, 0.1 + k * 0.035, 0.75 + k * 0.035));
+        var pout = inCubic(prog(t, 2.9 + k * 0.03, 3.5 + k * 0.03));
+        var dx = (1 - pin) * 1300 * side - pout * 1300 * side * dir;
+        var sy = k * sh * (img.height / size);
+        ctx.drawImage(img, 0, sy, img.width, sh * (img.height / size), cx - size / 2 + dx, cy - size / 2 + k * sh, size, sh + 0.5);
+      }
+    }
+    strips(o.logo, 1);
+    /* zwarte banen in de hoek van de logostrepen vegen het beeld om */
+    var nx = Math.cos(-0.95), ny = Math.sin(-0.95);
+    var c4 = [[0, 0], [W, 0], [0, H], [W, H]].map(function (c) { return c[0] * nx + c[1] * ny; });
+    var mn = Math.min.apply(null, c4), span = Math.max.apply(null, c4) - mn;
+    var lead = mn - 300 + (span + 600) * inOutCubic(prog(t, 1.3, 2.1));
+    function band(a, b) {
+      var tx = -ny, ty = nx, L = 4000;
       ctx.beginPath();
       ctx.moveTo(nx * a + tx * L, ny * a + ty * L);
       ctx.lineTo(nx * a - tx * L, ny * a - ty * L);
       ctx.lineTo(nx * b - tx * L, ny * b - ty * L);
       ctx.lineTo(nx * b + tx * L, ny * b + ty * L);
       ctx.closePath();
-      ctx.fill();
     }
-
-    var lead = mn - 200 + (span + 400) * inOutCubic(prog(t, 0.05, 0.7));
-    var trail = mn - 200 + (span + 400) * inOutCubic(prog(t, 1.1, 1.75));
-    band(Math.max(trail, mn - 400), lead, '#0a0a0a');
-    /* witte strepen zoals in het logo */
-    for (var i = 0; i < 3; i++) {
-      var off = 90 + i * 70;
-      band(lead + off - 22, lead + off, '#fff');
-      if (trail > mn - 200) band(trail - off, trail - off + 22, '#fff');
-    }
-
-    var lp = prog(t, 0.55, 1.05);
-    var lo = 1 - prog(t, 1.05, 1.25);
-    if (lp > 0 && lo > 0) {
-      ctx.globalAlpha = lo;
-      logoReveal(ctx, o.logoWhite, 540, 960, 420, lp, (1 - outCubic(lp)) * -0.6);
-      ctx.globalAlpha = 1;
-    }
+    ctx.save();
+    band(mn - 400, lead);
+    ctx.clip();
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, W, H);
+    strips(o.logoWhite, -1);
+    ctx.restore();
+    ctx.fillStyle = '#f4f4f2';
+    for (var i = 0; i < 3; i++) { band(lead - 92 - i * 60, lead - 70 - i * 60); ctx.fill(); }
+    grain(ctx, t, 0.08 * prog(t, 1.6, 2.1));
   }
 
   /* ---------- 5. Eindkaart met code ---------- */
@@ -416,12 +735,19 @@
     grain(ctx, t, 0.12);
   }
 
+  /* vijf visuals die mensen naar de hal halen, zes logo-animaties */
   var CLIPS = [
-    { id: 'rise-opener', title: 'Rise Above opener', duration: 5, kind: 'Intro', note: 'Zet aan het begin van je video.', draw: riseAbove },
-    { id: 'poging-teller', title: 'Poging-teller', duration: 6, kind: 'Intro of outro', note: 'Voor de video over dat ene project dat je eindelijk haalt.', draw: attempts },
-    { id: 'send-stempel', title: 'SEND! stempel', duration: 3, kind: 'Overlay, green screen', note: 'Leg over je top-out. Groen wegfilteren met chroma key in CapCut of Instagram.', draw: stamp },
-    { id: 'overgang', title: 'Corner-overgang', duration: 2, kind: 'Overgang, green screen', note: 'Tussen twee shots. Groen wegfilteren met chroma key.', draw: wipe },
-    { id: 'eindkaart', title: 'Eindkaart met jouw code', duration: 6, kind: 'Outro', note: 'Altijd als laatste shot. Hier komen nieuwe bezoekers vandaan.', draw: endcard, personal: true }
+    { id: 'eindkaart', duration: 6, draw: endcard, personal: true },
+    { id: 'eerste-keer', duration: 5, draw: firstTime },
+    { id: 'klim-mee', duration: 4.5, draw: bringFriend },
+    { id: 'poging-teller', duration: 6, draw: attempts },
+    { id: 'rise-opener', duration: 5, draw: riseAbove },
+    { id: 'logo-neon', duration: 4.6, draw: neonLogo },
+    { id: 'logo-krijt', duration: 4.5, draw: chalkCloud },
+    { id: 'logo-raster', duration: 4, draw: halftone },
+    { id: 'logo-glitch', duration: 4.2, draw: glitch },
+    { id: 'logo-code', duration: 4.5, draw: asciiLogo },
+    { id: 'logo-strepen', duration: 3.8, draw: stripes }
   ];
 
   root.RAMotion = { W: W, H: H, CLIPS: CLIPS, get: function (id) { return CLIPS.filter(function (c) { return c.id === id; })[0]; } };

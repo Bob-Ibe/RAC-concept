@@ -19,7 +19,7 @@
       <div class="hero-copy">
         <span class="eyebrow">The Climbing Corner · Heerlen</span>
         <h1>Rise<br>Above<br><span class="outline-text">Creators</span></h1>
-        <p class="lead">Je klimt toch al. Film het, post het en verdien er klimtegoed mee. Speel visuals van de hal vrij, zet ze in je Reels en help nieuwe klimmers naar de mat.</p>
+        <p class="lead">Stijg boven je creativiteit uit. Film het, post het en verdien er klimtegoed mee. Speel visuals van de hal vrij, zet ze in je Reels en help nieuwe klimmers naar de mat.</p>
         <div class="btn-row on-dark">
           <a class="btn btn--solid" href="dashboard/index.html">Doe mee</a>
           <a class="btn" href="spellen/index.html">Speel een spel</a>
@@ -103,7 +103,7 @@
 
   <section class="section section--dark">
     <div class="container center">
-      <h2 style="margin-bottom:24px">Klaar om<br><span class="outline-text">te klimmen?</span></h2>
+      <h2 style="margin-bottom:24px">Klaar om te creëren<br><span class="outline-text">en klimmen?</span></h2>
       <div class="btn-row on-dark" style="justify-content:center">
         <a class="btn btn--solid" href="dashboard/index.html">Doe mee</a>
         <a class="btn" href="ranglijst/index.html">Bekijk de ranglijst</a>
@@ -126,7 +126,7 @@
   ].map(function (r) { return '<div class="row"><div><strong>' + r[0] + '</strong><small>' + r[1] + '</small></div><span class="val">' + r[2] + '</span></div>'; }).join('');
 
   var lock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-  var pick = ['eindkaart', 'send-stempel', 'bob-glow', 'bob-munt'];
+  var pick = ['eindkaart', 'logo-neon', 'klim-mee', 'logo-raster'];
   document.querySelector('[data-vault-preview]').innerHTML = pick.map(function (id) {
     var v = RA.VAULT.filter(function (x) { return x.id === id; })[0];
     var open = RA.isUnlocked(id);
